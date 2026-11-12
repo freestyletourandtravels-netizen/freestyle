@@ -21,6 +21,8 @@ const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) =>
     .optional()
     .transform((v) => (v ? v : undefined));
 
+const blankToUndefined = (v: unknown) => (v === "" || v === null || v === undefined ? undefined : v);
+
 const countryCodes = phoneCountryCodes.map((c) => c.code) as [string, ...string[]];
 
 /** Normalises a typed number to national digits for the chosen country. */
@@ -47,7 +49,8 @@ export function phoneError(raw: string, countryCode: string): string | null {
  */
 export const enquirySchema = z
   .object({
-    source: z.enum(["popup", "package", "contact"]),
+    /** "quick" = short popup form (name, phone, email only). */
+    source: z.enum(["quick", "popup", "package", "contact"]),
     fullName: z
       .string()
       .trim()
@@ -74,13 +77,20 @@ export const enquirySchema = z
           .refine((v) => v >= todayIST(), "Travel date cannot be in the past")
           .optional(),
       ),
-    adults: z.coerce
-      .number({ message: "Enter number of adults" })
-      .int("Enter a whole number")
-      .min(1, "At least 1 adult")
-      .max(60, "For groups over 60, please call us"),
-    children: z.coerce.number({ message: "Enter number of children" }).int("Enter a whole number").min(0).max(30, "Please call us for larger groups"),
-    destination: z.enum(destinationOptions, { message: "Please choose a destination" }),
+    adults: z.preprocess(
+      blankToUndefined,
+      z.coerce
+        .number({ message: "Enter number of adults" })
+        .int("Enter a whole number")
+        .min(1, "At least 1 adult")
+        .max(60, "For groups over 60, please call us")
+        .optional(),
+    ),
+    children: z.preprocess(
+      blankToUndefined,
+      z.coerce.number({ message: "Enter number of children" }).int("Enter a whole number").min(0).max(30, "Please call us for larger groups").optional(),
+    ),
+    destination: z.preprocess(blankToUndefined, z.enum(destinationOptions, { message: "Please choose a destination" }).optional()),
     packageCategory: optionalEnum(packageCategoryOptions),
     hotelPreference: optionalEnum(hotelPreferenceOptions),
     packageName: optionalText(120),
@@ -92,6 +102,12 @@ export const enquirySchema = z
   .superRefine((v, ctx) => {
     const pe = phoneError(v.phone, v.countryCode);
     if (pe) ctx.addIssue({ code: "custom", path: ["phone"], message: pe });
+    if (v.source === "quick") {
+      if (!v.email) ctx.addIssue({ code: "custom", path: ["email"], message: "Please enter your email address" });
+      return;
+    }
+    if (!v.destination) ctx.addIssue({ code: "custom", path: ["destination"], message: "Please choose a destination" });
+    if (v.adults === undefined) ctx.addIssue({ code: "custom", path: ["adults"], message: "Enter number of adults" });
     if (v.source !== "contact" && !v.travelDate) {
       ctx.addIssue({ code: "custom", path: ["travelDate"], message: "Please choose your travel date" });
     }

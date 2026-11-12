@@ -66,7 +66,7 @@ export function EnquiryModal({ open, prefill, onClose }: { open: boolean; prefil
             aria-labelledby="enquiry-title"
             aria-describedby="enquiry-subtitle"
             tabIndex={-1}
-            className="relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[1.6rem] bg-white shadow-2xl outline-none md:max-h-[min(94svh,760px)] md:max-w-[38rem] md:rounded-[1.6rem]"
+            className="relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[1.6rem] bg-white shadow-2xl outline-none md:max-h-[min(94svh,640px)] md:max-w-[26rem] md:rounded-[1.6rem]"
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: 60, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 40, scale: 0.98 }}
@@ -87,11 +87,11 @@ export function EnquiryModal({ open, prefill, onClose }: { open: boolean; prefil
               <p className="inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-white/10 px-3.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-amber-300">
                 <Sparkles className="h-4 w-4" aria-hidden="true" /> Free Quote · No Obligation
               </p>
-              <h2 id="enquiry-title" className="mt-3 pr-10 text-[1.55rem] font-extrabold leading-tight text-white sm:text-[1.8rem]">
-                Plan Your Dream Kashmir Holiday!
+              <h2 id="enquiry-title" className="mt-3 pr-10 text-[1.4rem] font-extrabold leading-tight text-white sm:text-[1.55rem]">
+                Plan Your Kashmir Holiday!
               </h2>
               <p id="enquiry-subtitle" className="mt-1.5 max-w-md text-[0.88rem] leading-relaxed text-white/80">
-                Get a customised Kashmir itinerary and a free quote from our local team in Tangmarg.
+                Share your details and our Tangmarg team will call you with a free plan &amp; quote.
               </p>
             </div>
 

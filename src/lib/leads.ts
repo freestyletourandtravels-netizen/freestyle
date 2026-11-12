@@ -38,27 +38,76 @@ async function sendToWebhook(lead: Lead, url: string) {
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-async function sendEmail(lead: Lead, apiKey: string, to: string) {
+const FORM_NAMES: Record<string, string> = {
+  quick: "Website popup",
+  popup: "Trip planner",
+  package: "Package enquiry",
+  contact: "Contact page",
+};
+
+/** Subject + HTML + plain-text body for a lead notification email. */
+function leadEmail(lead: Lead) {
   const rows: [string, string | number | undefined][] = [
     ["Name", lead.fullName],
-    ["WhatsApp", formatPhone(lead)],
+    ["WhatsApp / Mobile", formatPhone(lead)],
     ["Email", lead.email],
+    ["Destination", lead.destination],
     ["Travel date", lead.travelDate],
     ["Adults", lead.adults],
     ["Children", lead.children],
-    ["Destination", lead.destination],
     ["Trip style", lead.packageCategory],
     ["Hotel preference", lead.hotelPreference],
     ["Package", lead.packageName],
     ["Message", lead.message],
-    ["Form", lead.source],
+    ["Form", FORM_NAMES[lead.source] ?? lead.source],
     ["Page", lead.pageUrl],
+    ["Received", new Date(lead.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })],
   ];
-  const html = `<h2>New Kashmir trip enquiry</h2><table cellpadding="6">${rows
-    .filter(([, v]) => v !== undefined && v !== "")
-    .map(([k, v]) => `<tr><td><b>${k}</b></td><td>${escapeHtml(String(v))}</td></tr>`)
-    .join("")}</table><p><a href="https://wa.me/${lead.countryCode || "91"}${lead.phone}">Reply on WhatsApp</a></p>`;
+  const filled = rows.filter(([, v]) => v !== undefined && v !== "");
+  const wa = `https://wa.me/${lead.countryCode || "91"}${lead.phone}`;
+  const subject = `New enquiry: ${lead.fullName}${lead.destination ? ` · ${lead.destination}` : ""}${lead.travelDate ? ` · ${lead.travelDate}` : ""}`;
 
+  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;border:1px solid #e3e8ef;border-radius:14px;overflow:hidden">
+  <div style="background:#243b60;color:#fff;padding:18px 22px">
+    <div style="font-size:12px;letter-spacing:1px;color:#f6b8b0;text-transform:uppercase">Freestyle Tour &amp; Travels</div>
+    <div style="font-size:20px;font-weight:bold;margin-top:4px">New website enquiry</div>
+  </div>
+  <table cellpadding="8" style="width:100%;border-collapse:collapse;font-size:14px;color:#171b22">${filled
+    .map(([k, v]) => `<tr style="border-bottom:1px solid #f0f2f5"><td style="width:38%;color:#5f6878">${k}</td><td><b>${escapeHtml(String(v))}</b></td></tr>`)
+    .join("")}</table>
+  <div style="padding:18px 22px">
+    <a href="${wa}" style="display:inline-block;background:#25d366;color:#0b2e1a;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:999px">Reply on WhatsApp</a>
+    <a href="tel:+${lead.countryCode || "91"}${lead.phone}" style="display:inline-block;margin-left:8px;color:#243b60;font-weight:bold">Call ${escapeHtml(formatPhone(lead))}</a>
+  </div>
+</div>`;
+  const text = filled.map(([k, v]) => `${k}: ${v}`).join("\n") + `\n\nReply on WhatsApp: ${wa}`;
+  return { subject, html, text };
+}
+
+/** Gmail (or any SMTP) — set SMTP_USER + SMTP_PASS (a Gmail App Password). */
+async function sendViaSmtp(lead: Lead, to: string) {
+  const nodemailer = await import("nodemailer");
+  const port = Number(process.env.SMTP_PORT || 465);
+  const transport = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port,
+    secure: port === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    connectionTimeout: 10000,
+  });
+  const { subject, html, text } = leadEmail(lead);
+  await transport.sendMail({
+    from: process.env.LEADS_FROM_EMAIL || `"Freestyle Website" <${process.env.SMTP_USER}>`,
+    to,
+    replyTo: lead.email || undefined,
+    subject,
+    html,
+    text,
+  });
+}
+
+async function sendViaResend(lead: Lead, apiKey: string, to: string) {
+  const { subject, html, text } = leadEmail(lead);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -66,8 +115,9 @@ async function sendEmail(lead: Lead, apiKey: string, to: string) {
       from: process.env.LEADS_FROM_EMAIL || "Freestyle Website <onboarding@resend.dev>",
       to: [to],
       reply_to: lead.email,
-      subject: `New enquiry: ${lead.fullName} · ${lead.destination}${lead.travelDate ? ` · ${lead.travelDate}` : ""}`,
+      subject,
       html,
+      text,
     }),
     signal: AbortSignal.timeout(8000),
   });
@@ -87,9 +137,10 @@ export async function storeLead(enquiry: Enquiry, meta: { userAgent?: string } =
   if (fileStorageEnabled()) tasks.push({ name: "file", run: () => saveToFile(lead) });
   const webhook = process.env.LEADS_WEBHOOK_URL;
   if (webhook) tasks.push({ name: "webhook", run: () => sendToWebhook(lead, webhook) });
+  const notify = process.env.LEADS_NOTIFY_EMAIL || "Freestyletourandtravels@gmail.com";
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) tasks.push({ name: "email (smtp)", run: () => sendViaSmtp(lead, notify) });
   const resendKey = process.env.RESEND_API_KEY;
-  const notify = process.env.LEADS_NOTIFY_EMAIL;
-  if (resendKey && notify) tasks.push({ name: "email", run: () => sendEmail(lead, resendKey, notify) });
+  if (resendKey) tasks.push({ name: "email (resend)", run: () => sendViaResend(lead, resendKey, notify) });
 
   if (tasks.length === 0) throw new Error("No lead storage is configured");
 
