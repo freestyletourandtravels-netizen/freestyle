@@ -65,7 +65,7 @@ export function travelAgencySchema() {
             name,
           })),
         ],
-        sameAs: [site.instagramUrl],
+        sameAs: [site.instagramUrl, site.facebookUrl],
         contactPoint: {
           "@type": "ContactPoint",
           telephone: site.phone.replace(/\s/g, ""),

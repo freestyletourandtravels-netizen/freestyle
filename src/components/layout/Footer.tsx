@@ -4,7 +4,7 @@ import { navLinks, site } from "@/data/site";
 import { packages } from "@/data/packages";
 import { destinations } from "@/data/destinations";
 import { Logo } from "@/components/ui/Logo";
-import { InstagramIcon, WhatsAppIcon } from "@/components/ui/BrandIcons";
+import { FacebookIcon, InstagramIcon, WhatsAppIcon } from "@/components/ui/BrandIcons";
 import { whatsappEnquiryMessage, whatsappLink } from "@/lib/whatsapp";
 
 export function Footer() {
@@ -20,6 +20,24 @@ export function Footer() {
               Sonamarg, Doodhpathri and Gurez Valley.
             </p>
             <p className="mt-8 font-serif text-3xl italic text-coral">{site.tagline}</p>
+            <div className="mt-6 flex gap-3" aria-label="Follow us">
+              {[
+                { href: site.instagramUrl, label: "Instagram", Icon: InstagramIcon },
+                { href: site.facebookUrl, label: "Facebook", Icon: FacebookIcon },
+                { href: whatsappLink(whatsappEnquiryMessage()), label: "WhatsApp", Icon: WhatsAppIcon },
+              ].map(({ href, label, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${site.name} on ${label}`}
+                  className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition-colors hover:bg-coral hover:ring-coral"
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-10 sm:grid-cols-3 lg:col-span-8">
@@ -95,6 +113,11 @@ export function Footer() {
                         </span>
                       ))}
                     </span>
+                  </a>
+                </li>
+                <li>
+                  <a href={site.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 hover:text-white">
+                    <FacebookIcon className="mt-0.5 h-4 w-4 shrink-0 text-coral" /> Facebook
                   </a>
                 </li>
                 <li className="flex items-start gap-3">

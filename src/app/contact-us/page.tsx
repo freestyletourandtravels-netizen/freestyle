@@ -5,7 +5,7 @@ import { PageHero } from "@/components/ui/PageHero";
 import { EnquiryForm } from "@/components/enquiry/EnquiryForm";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { FinalCta } from "@/components/home/FinalCta";
-import { InstagramIcon, WhatsAppIcon } from "@/components/ui/BrandIcons";
+import { FacebookIcon, InstagramIcon, WhatsAppIcon } from "@/components/ui/BrandIcons";
 import { pageMetadata } from "@/lib/seo";
 import { whatsappEnquiryMessage, whatsappLink } from "@/lib/whatsapp";
 
@@ -48,6 +48,14 @@ export default function ContactPage() {
       value: `@${site.instagramHandle}`,
       href: site.instagramUrl,
       action: "Follow our journeys",
+      external: true,
+    },
+    {
+      icon: FacebookIcon,
+      label: "Facebook",
+      value: "Freestyle Tour & Travels",
+      href: site.facebookUrl,
+      action: "See us on Facebook",
       external: true,
     },
   ];

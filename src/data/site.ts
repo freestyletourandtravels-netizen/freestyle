@@ -13,8 +13,9 @@ export const site = {
   phoneHref: "tel:+917889649774",
   whatsappNumber: "917889649774",
   email: "Freestyletourandtravels@gmail.com",
-  instagramHandle: "freestyle_tour_and_travels",
-  instagramUrl: "https://www.instagram.com/freestyle_tour_and_travels/",
+  instagramHandle: "freestyle__tour_and_travels",
+  instagramUrl: "https://www.instagram.com/freestyle__tour_and_travels/",
+  facebookUrl: "https://www.facebook.com/share/p/1CGGn43VkS/",
   address: {
     locality: "Tangmarg",
     region: "Jammu & Kashmir",
@@ -33,10 +34,10 @@ export const site = {
    * typographic wordmark is shown instead.
    */
   logo: {
-    src: null as string | null, // e.g. "/logo.png"
+    src: "/logo.png" as string | null,
     srcOnDark: null as string | null, // e.g. "/logo-white.png"
-    width: 512,
-    height: 512,
+    width: 432,
+    height: 432,
   },
   ogImage: "/images/srinagar-dal-sunset.jpg",
 } as const;

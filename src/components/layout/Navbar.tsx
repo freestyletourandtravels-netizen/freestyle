@@ -9,7 +9,7 @@ import clsx from "clsx";
 import { navLinks, site } from "@/data/site";
 import { Logo } from "@/components/ui/Logo";
 import { EnquiryButton } from "@/components/enquiry/EnquiryButton";
-import { InstagramIcon, WhatsAppIcon } from "@/components/ui/BrandIcons";
+import { FacebookIcon, InstagramIcon, WhatsAppIcon } from "@/components/ui/BrandIcons";
 import { whatsappEnquiryMessage, whatsappLink } from "@/lib/whatsapp";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -229,6 +229,9 @@ export function Navbar() {
               </a>
               <a href={site.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
                 <InstagramIcon className="h-4 w-4 text-coral" /> @{site.instagramHandle}
+              </a>
+              <a href={site.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+                <FacebookIcon className="h-4 w-4 text-coral" /> Facebook
               </a>
               <p className="flex items-center gap-3">
                 <MapPin className="h-4 w-4 text-coral" aria-hidden="true" /> {site.address.locality}, Kashmir

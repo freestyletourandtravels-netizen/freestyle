@@ -15,17 +15,23 @@ export function Logo({ tone = "dark", className, priority, size = "md" }: Props)
   const src = tone === "light" && site.logo.srcOnDark ? site.logo.srcOnDark : site.logo.src;
 
   if (src) {
-    const w = Math.round((site.logo.width / site.logo.height) * h);
+    // Original round badge (never stretched) + the name beside it for legibility.
     return (
-      <Image
-        src={src}
-        alt={`${site.name} logo`}
-        width={w}
-        height={h}
-        priority={priority}
-        className={clsx("h-auto w-auto object-contain", className)}
-        style={{ height: h, width: "auto" }}
-      />
+      <span className={clsx("inline-flex items-center gap-2.5 leading-none", tone === "light" ? "text-white" : "text-navy", className)}>
+        <Image
+          src={src}
+          alt={`${site.name} logo`}
+          width={h}
+          height={Math.round((site.logo.height / site.logo.width) * h)}
+          priority={priority}
+          className="shrink-0 rounded-full object-contain"
+          style={{ width: h, height: "auto" }}
+        />
+        <span className="flex flex-col">
+          <span className={clsx("font-serif font-bold tracking-tight", size === "lg" ? "text-3xl" : size === "sm" ? "text-lg" : "text-xl")}>Freestyle</span>
+          <span className="mt-1 text-[0.56rem] font-semibold uppercase tracking-[0.3em] opacity-80">Tour &amp; Travels</span>
+        </span>
+      </span>
     );
   }
 
